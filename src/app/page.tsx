@@ -1,69 +1,193 @@
-import Image from "next/image";
+"use client";
+
+import React, { useState, useEffect } from "react";
+import Navbar from "@/components/Navbar";
+import HeroSection from "@/components/HeroSection";
+import SportsCategories from "@/components/SportsCategories";
+import FeaturedVenues from "@/components/FeaturedVenues";
+import SlotFinderSection from "@/components/SlotFinderSection";
+import HowItWorks from "@/components/HowItWorks";
+import WhyTurfTime from "@/components/WhyTurfTime";
+import PromotionalBanner from "@/components/PromotionalBanner";
+import CommunityTestimonials from "@/components/CommunityTestimonials";
+import FAQSection from "@/components/FAQSection";
+import Footer from "@/components/Footer";
+import VenueDetailsModal from "@/components/VenueDetailsModal";
+import BookingModal from "@/components/BookingModal";
+import MyBookingsDrawer from "@/components/MyBookingsDrawer";
+
+import { SAMPLE_VENUES } from "@/data/venues";
+import { Venue, SportType, BookingRequest } from "@/types";
 
 export default function Home() {
+  // Global filter states
+  const [activeSport, setActiveSport] = useState<SportType>("all");
+  const [venues, setVenues] = useState<Venue[]>(SAMPLE_VENUES);
+
+  // Modals & Drawers state
+  const [selectedVenueForDetails, setSelectedVenueForDetails] = useState<Venue | null>(null);
+  const [selectedVenueForBooking, setSelectedVenueForBooking] = useState<Venue | null>(null);
+  const [bookingInitialDate, setBookingInitialDate] = useState<string | undefined>();
+  const [bookingInitialSlot, setBookingInitialSlot] = useState<string | undefined>();
+  const [myBookingsOpen, setMyBookingsOpen] = useState(false);
+  const [bookingCount, setBookingCount] = useState(2); // Initial seed count
+
+  // Fetch count of bookings on mount
+  useEffect(() => {
+    const fetchCount = async () => {
+      try {
+        const res = await fetch("/api/bookings");
+        const data = await res.json();
+        if (data.bookings) {
+          setBookingCount(data.bookings.length);
+        }
+      } catch {
+        // ignore
+      }
+    };
+    fetchCount();
+  }, []);
+
+  // Filter venues when activeSport changes
+  const displayedFeaturedVenues = React.useMemo(() => {
+    if (activeSport === "all") return SAMPLE_VENUES;
+    return SAMPLE_VENUES.filter((v) => v.sport === activeSport);
+  }, [activeSport]);
+
+  // Handlers
+  const handleHeroSearch = (filters: {
+    sport: SportType;
+    location: string;
+    date: string;
+    slotTime: string;
+  }) => {
+    setActiveSport(filters.sport);
+    setBookingInitialDate(filters.date);
+    setBookingInitialSlot(filters.slotTime);
+
+    // Smooth scroll down to slot finder section
+    const el = document.getElementById("slot-finder");
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  const handleOpenBooking = (venue: Venue, date?: string, slot?: string) => {
+    setSelectedVenueForBooking(venue);
+    setBookingInitialDate(date);
+    setBookingInitialSlot(slot);
+  };
+
+  const handleBookingSuccess = (booking: BookingRequest) => {
+    setBookingCount((prev) => prev + 1);
+  };
+
+  const handleBookFirstAvailable = () => {
+    // Select the first featured venue or default
+    const target = displayedFeaturedVenues[0] || SAMPLE_VENUES[0];
+    handleOpenBooking(target);
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <main className="min-h-screen bg-[#060c08] text-white selection:bg-[#22c55e]/30 selection:text-[#a3e635]">
+      {/* 1. Navigation */}
+      <Navbar
+        onOpenMyBookings={() => setMyBookingsOpen(true)}
+        onBookNow={handleBookFirstAvailable}
+        bookingCount={bookingCount}
+      />
+
+      {/* 2. Hero Section & Integrated Quick Search */}
+      <HeroSection
+        onSearch={handleHeroSearch}
+        onExploreClick={() => {
+          const el = document.getElementById("venues");
+          if (el) el.scrollIntoView({ behavior: "smooth" });
+        }}
+        onFindTurfClick={() => {
+          const el = document.getElementById("slot-finder");
+          if (el) el.scrollIntoView({ behavior: "smooth" });
+        }}
+      />
+
+      {/* 3. Explore by Sport Categories */}
+      <SportsCategories
+        activeSport={activeSport}
+        onSelectSport={(sport) => {
+          setActiveSport(sport);
+          const el = document.getElementById("venues");
+          if (el) el.scrollIntoView({ behavior: "smooth" });
+        }}
+      />
+
+      {/* 4. Featured Venues Showcase */}
+      <FeaturedVenues
+        venues={displayedFeaturedVenues}
+        onSelectVenue={(v) => setSelectedVenueForDetails(v)}
+        onBookSlot={(v) => handleOpenBooking(v)}
+      />
+
+      {/* 5. Slot Finder & Interactive Filter Engine */}
+      <SlotFinderSection
+        venues={SAMPLE_VENUES}
+        activeSport={activeSport}
+        onSelectSport={setActiveSport}
+        onBookVenueSlot={(venue, date, slot) => handleOpenBooking(venue, date, slot)}
+        onViewVenue={(venue) => setSelectedVenueForDetails(venue)}
+      />
+
+      {/* 6. How It Works */}
+      <HowItWorks />
+
+      {/* 7. Why TurfTime */}
+      <WhyTurfTime />
+
+      {/* 8. Standout Promotional Callout */}
+      <PromotionalBanner onBookNow={handleBookFirstAvailable} />
+
+      {/* 9. Community & Testimonials */}
+      <CommunityTestimonials />
+
+      {/* 10. Interactive FAQ Accordion */}
+      <FAQSection />
+
+      {/* 11. Comprehensive Footer */}
+      <Footer />
+
+      {/* Modals & Slide-overs */}
+      {selectedVenueForDetails && (
+        <VenueDetailsModal
+          venue={selectedVenueForDetails}
+          onClose={() => setSelectedVenueForDetails(null)}
+          onBookNow={(venue) => {
+            setSelectedVenueForDetails(null);
+            handleOpenBooking(venue);
+          }}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      )}
+
+      {selectedVenueForBooking && (
+        <BookingModal
+          venue={selectedVenueForBooking}
+          initialDate={bookingInitialDate}
+          initialSlot={bookingInitialSlot}
+          onClose={() => setSelectedVenueForBooking(null)}
+          onBookingSuccess={handleBookingSuccess}
+          onOpenMyBookings={() => {
+            setSelectedVenueForBooking(null);
+            setMyBookingsOpen(true);
+          }}
+        />
+      )}
+
+      <MyBookingsDrawer
+        isOpen={myBookingsOpen}
+        onClose={() => setMyBookingsOpen(false)}
+        onNewBookingClick={() => {
+          setMyBookingsOpen(false);
+          handleBookFirstAvailable();
+        }}
+      />
+    </main>
   );
 }
