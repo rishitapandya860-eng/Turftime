@@ -1,10 +1,16 @@
 import fs from "fs";
 import path from "path";
+import os from "os";
 import { BookingRequest, BookingSubmissionPayload } from "@/types";
 
-// Persistent file storage directory
-const DATA_DIR = path.join(process.cwd(), "data");
-const DATA_FILE = path.join(DATA_DIR, "bookings.json");
+// Persistent file storage directory:
+// On Vercel / AWS Lambda, process.cwd() is read-only, so we write to os.tmpdir()
+const isVercel = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+const DATA_DIR = isVercel ? os.tmpdir() : path.join(process.cwd(), "data");
+const DATA_FILE = path.join(DATA_DIR, "turftime_bookings.json");
+
+// In-memory fallback/cache for serverless warm execution
+let inMemoryBookings: BookingRequest[] | null = null;
 
 // Initial sample seed bookings so reviewers see realistic prototype records immediately
 const INITIAL_SEED_BOOKINGS: BookingRequest[] = [
@@ -55,10 +61,21 @@ function ensureDataFile(): void {
       fs.mkdirSync(DATA_DIR, { recursive: true });
     }
     if (!fs.existsSync(DATA_FILE)) {
+      // Check if original data/bookings.json exists in repo to clone from
+      const seedFile = path.join(process.cwd(), "data", "bookings.json");
+      if (fs.existsSync(seedFile)) {
+        try {
+          const content = fs.readFileSync(seedFile, "utf8");
+          fs.writeFileSync(DATA_FILE, content, "utf8");
+          return;
+        } catch {
+          // fallback
+        }
+      }
       fs.writeFileSync(DATA_FILE, JSON.stringify(INITIAL_SEED_BOOKINGS, null, 2), "utf8");
     }
   } catch (err) {
-    console.error("Error creating data storage:", err);
+    console.error("Storage initialization warning:", err);
   }
 }
 
