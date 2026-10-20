@@ -14,11 +14,11 @@ export const SAMPLE_VENUES: Venue[] = [
     pricePerHour: 1800,
     rating: 4.9,
     reviewCount: 284,
-    imageUrl: "https://images.unsplash.com/photo-1529900245534-47fbf8221565?auto=format&fit=crop&w=1200&q=80",
+    imageUrl: "/images/football-action.jpg",
     gallery: [
+      "/images/football-action.jpg",
       "https://images.unsplash.com/photo-1529900245534-47fbf8221565?auto=format&fit=crop&w=1200&q=80",
       "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=1200&q=80",
-      "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=1200&q=80",
     ],
     badges: ["FIFA Grade Turf", "500 Lux Floodlights", "Popular Choice"],
     amenities: [
@@ -299,8 +299,9 @@ export const SAMPLE_VENUES: Venue[] = [
     pricePerHour: 1100,
     rating: 4.9,
     reviewCount: 160,
-    imageUrl: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1200&q=80",
+    imageUrl: "/images/pickleball-padel.png",
     gallery: [
+      "/images/pickleball-padel.png",
       "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1200&q=80",
       "https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?auto=format&fit=crop&w=1200&q=80",
     ],
@@ -342,7 +343,7 @@ export const SPORT_CATEGORIES = [
     tag: "5v5 & 7v7 AstroTurf",
     count: "18 Turfs",
     startingPrice: "₹1,350/hr",
-    imageUrl: "https://images.unsplash.com/photo-1529900245534-47fbf8221565?auto=format&fit=crop&w=600&q=80",
+    imageUrl: "/images/football-action.jpg",
     iconName: "Flame",
   },
   {
@@ -387,7 +388,7 @@ export const SPORT_CATEGORIES = [
     tag: "Panoramic Glass Courts",
     count: "7 Venues",
     startingPrice: "₹950/hr",
-    imageUrl: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=600&q=80",
+    imageUrl: "/images/pickleball-padel.png",
     iconName: "Sparkles",
   },
 ];
